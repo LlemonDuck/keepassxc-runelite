@@ -1,5 +1,6 @@
 package abex.os.keepassxc.proto.path;
 
+import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import java.io.File;
 import java.io.IOException;
@@ -138,11 +139,8 @@ public class ProxyPathResolver
 				.redirectOutput(ProcessBuilder.Redirect.PIPE)
 				.start();
 
-			String regOutput;
-			try (InputStreamReader isr = new InputStreamReader(regProc.getInputStream()))
-			{
-				regOutput = CharStreams.toString(isr);
-			}
+			byte[] commandBytes = ByteStreams.toByteArray(regProc.getInputStream());
+			String regOutput = new String(commandBytes, StandardCharsets.ISO_8859_1);
 
 			// extract manifest path output
 			Matcher m = ENTRY_REGEX.matcher(regOutput);
