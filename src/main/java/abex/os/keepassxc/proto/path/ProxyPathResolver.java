@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.util.OSType;
 import net.runelite.http.api.RuneLiteAPI;
+import sun.security.util.HexDumpEncoder;
 
 @Slf4j
 public class ProxyPathResolver
@@ -140,6 +141,7 @@ public class ProxyPathResolver
 				.start();
 
 			byte[] commandBytes = ByteStreams.toByteArray(regProc.getInputStream());
+			System.out.println(new HexDumpEncoder().encode(commandBytes));
 			String regOutput = new String(commandBytes, StandardCharsets.ISO_8859_1);
 
 			// extract manifest path output
