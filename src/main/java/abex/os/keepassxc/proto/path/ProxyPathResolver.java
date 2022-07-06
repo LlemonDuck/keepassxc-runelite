@@ -1,7 +1,11 @@
 package abex.os.keepassxc.proto.path;
 
+import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.WinReg;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -132,29 +136,16 @@ public class ProxyPathResolver
 
 	private static boolean testWindowsBrowser(String browser)
 	{
-		String regKey = "HKEY_CURRENT_USER\\Software\\" + browser + "\\NativeMessagingHosts\\org.keepassxc.keepassxc_browser";
+		String regKey = "Software\\" + browser + "\\NativeMessagingHosts\\org.keepassxc.keepassxc_browser";
 
 		try
 		{
-			Process regProc = new ProcessBuilder("reg", "query", regKey)
-				.redirectOutput(ProcessBuilder.Redirect.PIPE)
-				.start();
-
-			byte[] commandBytes = ByteStreams.toByteArray(regProc.getInputStream());
-			System.out.println(new HexDumpEncoder().encode(commandBytes));
-			String regOutput = new String(commandBytes, StandardCharsets.ISO_8859_1);
-
-			// extract manifest path output
-			Matcher m = ENTRY_REGEX.matcher(regOutput);
-			if (m.find())
-			{
-				return testManifest(new File(m.group(1)));
-			}
-			return false;
+			String manifestFile = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, regKey, "");
+			return !Strings.isNullOrEmpty(manifestFile) && testManifest(new File(manifestFile));
 		}
-		catch (IOException e)
+		catch (Win32Exception e)
 		{
-			log.warn("Failed to read registry key {}: {}", regKey, e);
+			log.debug("Failed to read registry key {}", regKey);
 			return false;
 		}
 	}
